@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import TodoForm from "./TodoForm";
 import TodoList from "./TodoList";
 import axios from "axios";
@@ -9,82 +9,82 @@ const request = axios.create({
     headers: { "Authorization": `Bearer ${localStorage.getItem("token")}` }
 });
 
-export default class TodoBox extends Component {
-    constructor(props) {
-        super(props)
-        this.state = {
-            todos: []
-        }
-    }
+export default function TodoBox(props) {
+    const [todos, setTodos] = useState([])
 
-    componentDidMount() {
+
+    useEffect(() => {
         request.get("todos").then((response) => {
             if (response.data.success) {
-                this.setState({ todos: response.data.data.map(item => {
+                setTodos(response.data.data.map(item => {
                     item.sent = true
                     return item
-                })})
+                }))
             } else {
                 alert(response.data.data)
-                
+
             }
         }).catch((err) => {
             alert("gagal mas bro")
         })
-    }
+    }, [])
 
-    addTodo = (title) => {
+    const addTodo = useCallback((title) => {
         const _id = Date.now()
-        this.setState((state, props) => ({ todos: [...state.todos, { _id, title, sent: true }] }))
-        request.post("todos", { title }).then((response) => { 
-            this.setState((state, props) => ({ todos: state.todos.map(item => {
-                if(item._id === _id){
+        setTodos([...todos, { _id, title, sent: true }])
+
+        request.post("todos", { title }).then((response) => {
+            setTodos(todos.map(item => {
+                if (item._id === _id) {
                     item._id = response.data._id
                 }
                 return item
-            }) }))
-
-        }).catch((err) => { 
-            this.setState((state, props) => ({ todos: state.todos.map(item => {
-                if(item._id === _id){
-                    item.sent = false 
+            }))
+        }).catch((err) => {
+            setTodos(todos.map(item => {
+                if (item._id === _id) {
+                    item.sent = false
                 }
                 return item
-            }) }))
-
+            })
+            )
         })
 
-    }
+    }, [title, todos])
 
-    removeTodo = (id) => {
-        request.delete(`todos/${id}`).then((response) => { 
-            this.setState((state, props) => ({ todos: state.todos.filter(item => item._id !== id) }))
+    const removeTodo = useCallback((id) => {
 
-        }).catch((err) => { 
-            
+
+        request.delete(`todos/${id}`).then((response) => {
+            setTodos(todos.filter(item => item._id !== id))
+
+        }).catch((err) => {
+
         })
-    }
+    }, [id])
 
-    resendTodo = (id, title) => {
-        request.post(`todos`, {title}).then((response) => { 
-            this.setState((state, props) => ({ todos: state.todos.map(item => {
-                if(item._id === id){
-                    item.sent = true 
-                }
-                return item
-            }) }))
-        }).catch((err) => { 
-            
+    const resendTodo = useCallback((id, title) => {
+
+
+        request.post(`todos`, { title }).then((response) => {
+            setTodos(todos.map(item => {
+                    if (item._id === id) {
+                        item.sent = true
+                    }
+                    return item
+                })
+            )
+        }).catch((err) => {
+
         })
-    }
+    }, [id, title, todos]);
 
-
-    render() {
+    
         return (
             <div className="container">
-                <TodoForm add={this.addTodo} />
-                <TodoList todos={this.state.todos} remove={this.removeTodo} resend={this.resendTodo} />
+                <TodoForm add={addTodo} />
+                <TodoList todos={todos} remove={removeTodo} resend={resendTodo} />
             </div>
         )
-    }
+    
 }
