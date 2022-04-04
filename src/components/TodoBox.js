@@ -34,14 +34,14 @@ export default function TodoBox(props) {
         setTodos([...todos, { _id, title, sent: true }])
 
         request.post("todos", { title }).then((response) => {
-            setTodos(todos.map(item => {
+            setTodos(todos => todos.map(item => {
                 if (item._id === _id) {
                     item._id = response.data._id
                 }
                 return item
             }))
         }).catch((err) => {
-            setTodos(todos.map(item => {
+            setTodos(todos => todos.map(item => {
                 if (item._id === _id) {
                     item.sent = false
                 }
@@ -50,41 +50,41 @@ export default function TodoBox(props) {
             )
         })
 
-    }, [title, todos])
+    },  [todos])
 
     const removeTodo = useCallback((id) => {
 
 
         request.delete(`todos/${id}`).then((response) => {
-            setTodos(todos.filter(item => item._id !== id))
+            setTodos(todos => todos.filter(item => item._id !== id))
 
         }).catch((err) => {
 
         })
-    }, [id])
+    }, [])
 
     const resendTodo = useCallback((id, title) => {
 
 
         request.post(`todos`, { title }).then((response) => {
-            setTodos(todos.map(item => {
-                    if (item._id === id) {
-                        item.sent = true
-                    }
-                    return item
-                })
+            setTodos(todos => todos.map(item => {
+                if (item._id === id) {
+                    item.sent = true
+                }
+                return item
+            })
             )
         }).catch((err) => {
 
         })
-    }, [id, title, todos]);
+    }, [todos]);
 
-    
-        return (
-            <div className="container">
-                <TodoForm add={addTodo} />
-                <TodoList todos={todos} remove={removeTodo} resend={resendTodo} />
-            </div>
-        )
-    
+
+    return (
+        <div className="container">
+            <TodoForm add={addTodo} />
+            <TodoList todos={todos} remove={removeTodo} resend={resendTodo} />
+        </div>
+    )
+
 }
